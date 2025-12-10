@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>LogScale Data Ingestion</title>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "@crowdstrike/foundry-js": "https://unpkg.com/@crowdstrike/foundry-js"
+        }
+      }
+    </script>
+
+    <link
+        rel="stylesheet"
+        href="https://assets.foundry.crowdstrike.com/tailwind-toucan-base@5.0.0/toucan.css"
+    />
+    <!-- Shoelace Components and Falcon Theme -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/themes/light.css" />
+    <link rel="stylesheet" href="https://unpkg.com/@crowdstrike/falcon-shoelace/dist/style.css" />
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/shoelace-autoloader.js"></script>
+    <style>
+      /* Form inputs and labels */
+      input, textarea, select, label {
+        font-size: 13px;
+      }
+
+      /* Fix placeholder text contrast */
+      input::placeholder,
+      textarea::placeholder,
+      select {
+        opacity: 1;
+      }
+
+      /* Light mode form field styling */
+      input, textarea, select {
+        border-color: #e5e7eb !important; /* Subtle gray border */
+      }
+
+      input::placeholder,
+      textarea::placeholder {
+        color: #6b7280 !important; /* Medium gray for better readability */
+      }
+
+      /* Focus state */
+      input:focus,
+      textarea:focus,
+      select:focus {
+        outline: none !important;
+        border-color: #3b82f6 !important; /* Blue focus border */
+        box-shadow: 0 0 0 1px #3b82f6 !important;
+      }
+
+      /* Dark mode specific styling */
+      @media (prefers-color-scheme: dark) {
+        input, textarea, select {
+          background-color: transparent !important;
+          border-color: #374151 !important; /* Very subtle dark border */
+        }
+
+        input::placeholder,
+        textarea::placeholder {
+          color: #9ca3af !important; /* Lighter gray in dark mode */
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+          border-color: #3b82f6 !important;
+          box-shadow: 0 0 0 1px #3b82f6 !important;
+        }
+      }
+
+      /* Make buttons look like defaults */
+      .type-md-medium {
+        font-weight: bold;
+        font-size: .8rem;
+      }
+
+      /* Fix badge colors for both light and dark modes */
+      /* Falcon Shoelace theme removes the default badge colors, so we restore them */
+      sl-badge[variant="success"]::part(base) {
+        background-color: #16a34a;
+        color: white;
+        border: none;
+      }
+
+      sl-badge[variant="warning"]::part(base) {
+        background-color: #f59e0b;
+        color: white;
+        border: none;
+      }
+
+      sl-badge[variant="danger"]::part(base) {
+        background-color: #ef4444;
+        color: white;
+        border: none;
+      }
+
+      sl-badge[variant="primary"]::part(base) {
+        background-color: #0ea5e9;
+        color: white;
+        border: none;
+      }
+
+
+      sl-details {
+          border: none !important;
+          border-bottom: 1px solid #e5e7eb !important;
+      }
+
+      sl-details::part(base) {
+          border: none !important;
+      }
+
+      sl-details::part(header) {
+          border: none !important;
+          border-bottom: 1px solid #e5e7eb !important;
+      }
+
+      sl-details::part(summary) {
+          border: none !important;
+      }
+
+      /* Dark mode improvements for Shoelace components */
+      @media (prefers-color-scheme: dark) {
+        /* Remove card borders in dark mode */
+        sl-card {
+          --border-width: 0;
+        }
+
+        /* Remove all borders from details component */
+        sl-details {
+          border-bottom: 1px solid #6b7280 !important;
+        }
+
+        sl-details::part(header) {
+          border-bottom: 1px solid #6b7280 !important;
+        }
+      }
+
+      /* Make View Full Event Data text smaller in both modes */
+      sl-details::part(header) {
+        font-size: 16px;
+        padding: 0.75rem 0 !important;
+      }
+
+      sl-details::part(summary) {
+        font-size: 16px;
+      }
+    </style>
+  </head>
+
+  <body class="bg-ground-floor">
+    <div id="app" class="p-6 max-w-2xl mx-auto">
+      <h1 class="text-titles-and-attributes text-2xl mb-2">Ingest Custom Data into LogScale</h1>
+      <p class="text-body-and-labels mb-6">Use this form to submit custom security events, threat intelligence, or other data to LogScale.</p>
+
+      <form id="ingestForm">
+        <div class="mb-4">
+          <label for="eventType" class="block text-titles-and-attributes font-semibold mb-1">Event Type *</label>
+          <small class="block text-body-and-labels opacity-60 text-xs mb-1">Type of security event you're ingesting (e.g., custom_alert, threat_intel, security_event)</small>
+          <input
+            type="text"
+            id="eventType"
+            name="eventType"
+            required
+            class="w-full px-3 py-2 border border-primary rounded bg-white dark:bg-transparent text-titles-and-attributes placeholder:text-body-and-labels"
+          />
+        </div>
+
+        <div class="mb-4">
+          <label for="severity" class="block text-titles-and-attributes font-semibold mb-1">Severity *</label>
+          <select
+            id="severity"
+            name="severity"
+            required
+            class="w-full px-3 py-2 border border-primary rounded bg-white dark:bg-transparent text-titles-and-attributes"
+          >
+            <option value="">Select severity...</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="critical">Critical</option>
+          </select>
+        </div>
+
+        <div class="mb-4">
+          <label for="description" class="block text-titles-and-attributes font-semibold mb-1">Description *</label>
+          <small class="block text-body-and-labels opacity-60 text-xs mb-1">Describe the security event or data you're ingesting</small>
+          <textarea
+            id="description"
+            name="description"
+            rows="4"
+            required
+            class="w-full px-3 py-2 border border-primary rounded bg-white dark:bg-transparent text-titles-and-attributes placeholder:text-body-and-labels"
+          ></textarea>
+        </div>
+
+        <div class="mb-4">
+          <label for="additionalFields" class="block text-titles-and-attributes font-semibold mb-1">Additional Fields (JSON)</label>
+          <small class="block text-body-and-labels opacity-60 text-xs mb-1">Optional: Add custom fields in JSON format (e.g., <code>{"field": "value"}</code>)</small>
+          <textarea
+            id="additionalFields"
+            name="additionalFields"
+            rows="6"
+            class="w-full px-3 py-2 border border-primary rounded font-mono text-sm bg-white dark:bg-transparent text-titles-and-attributes placeholder:text-body-and-labels"
+          ></textarea>
+        </div>
+
+        <div class="flex gap-2">
+          <button
+            type="submit"
+            id="submitBtn"
+            class="focusable inline-flex items-center justify-center transition truncate type-md-medium rounded-sm interactive-primary px-4 py-1"
+            data-test-selector="submit-data-button"
+          >
+            <span id="submitText">Submit Data</span>
+            <span id="submitSpinner" class="hidden">⏳ Submitting...</span>
+          </button>
+          <button
+            type="button"
+            id="fillTestDataBtn"
+            class="focusable inline-flex items-center justify-center transition truncate type-md-medium rounded-sm interactive-normal px-4 py-1"
+            data-test-selector="fill-test-data-button"
+          >
+            Fill with Test Data
+          </button>
+          <button
+            type="reset"
+            class="focusable inline-flex items-center justify-center transition truncate type-md-medium rounded-sm interactive-normal px-4 py-1"
+            data-test-selector="clear-form-button"
+          >
+            Clear Form
+          </button>
+        </div>
+      </form>
+
+      <div class="mt-10">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-titles-and-attributes text-xl mb-1">Recent Ingested Data</h2>
+            <p class="text-body-and-labels text-sm">Latest events from LogScale (may take 1-2 minutes to appear after ingestion)</p>
+          </div>
+          <sl-button variant="default" size="medium" id="refreshBtn">
+            <sl-icon slot="prefix" name="arrow-clockwise"></sl-icon>
+            Refresh
+          </sl-button>
+        </div>
+
+        <!-- Loading state -->
+        <div id="loadingState" class="hidden text-center py-8">
+          <sl-spinner style="font-size: 2rem;"></sl-spinner>
+          <p class="text-body-and-labels mt-3">Loading recent events...</p>
+        </div>
+
+        <!-- Empty state -->
+        <div id="emptyState" class="text-center py-8 text-body-and-labels hidden">
+          <sl-icon name="inbox" style="font-size: 3rem; opacity: 0.5;"></sl-icon>
+          <p class="mt-3">No events found in the last hour.</p>
+          <p class="text-sm mt-1">Submit data above to see it appear here.</p>
+        </div>
+
+        <!-- Error state -->
+        <div id="errorState" class="hidden">
+          <sl-alert variant="danger" open>
+            <sl-icon slot="icon" name="exclamation-octagon"></sl-icon>
+            <strong>Query Failed</strong><br />
+            <span id="errorMessage"></span>
+          </sl-alert>
+        </div>
+
+        <!-- Results -->
+        <div id="resultsContainer" class="space-y-3"></div>
+      </div>
+    </div>
+
+    <!-- Toast container -->
+    <div id="toastContainer" class="fixed top-8 right-8 z-50 flex flex-col gap-3 min-w-80 max-w-md"></div>
+
+    <script src="./app.js" type="module"></script>
+  </body>
+</html>

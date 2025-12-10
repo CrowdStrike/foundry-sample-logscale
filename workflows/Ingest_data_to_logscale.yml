@@ -1,0 +1,21 @@
+name: Ingest Data to LogScale
+description: On-demand workflow to ingest custom JSON data into LogScale
+provision_on_install: true
+trigger:
+    next:
+        - ingest_to_logscale_function
+    name: On demand
+    parameters:
+        properties:
+            json_data:
+                type: object
+                title: JSON Data
+                description: JSON object to ingest into LogScale
+                default:
+                    example_field: example_value
+        type: object
+actions:
+    ingest_to_logscale_function:
+        id: functions.logscale-ingest.LogScale Ingest
+        properties:
+            data: ${json_data}

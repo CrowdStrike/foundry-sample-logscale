@@ -1,0 +1,87 @@
+name: Custom Data Ingestion to LogScale
+description: Demonstrates ingesting custom security data into LogScale using a Python function and FalconPy
+logo: ""
+vendor: CrowdStrike
+vendor_products: []
+use_case: Data security
+manifest_version: "2023-05-09"
+ignored:
+    - .+/node_modules$
+    - .+/node_modules/.+
+    - .+/venv$
+    - .+/venv/.+
+    - .+/coverage$
+    - .+/coverage/.+
+ui:
+    homepage: pages.data-ingestion
+    extensions: []
+    pages:
+        data-ingestion:
+            name: data-ingestion
+            description: Form to ingest custom data into LogScale
+            path: ui/pages/data-ingestion/src
+            entrypoint: ui/pages/data-ingestion/src/index.html
+            content_security_policy:
+                connect-src:
+                    - https://cdn.jsdelivr.net
+                    - https://unpkg.com
+                style-src: []
+                style-src-elem:
+                    - https://cdn.jsdelivr.net
+                    - https://unpkg.com
+                script-src:
+                    - https://cdn.jsdelivr.net
+                    - https://unpkg.com
+                form-action: []
+                img-src: []
+                media-src: []
+                object-src: []
+            permissions: []
+    dashboards: {}
+    navigation:
+        links:
+            - path: /
+              name: Data Ingestion
+              permissions: []
+              ref: pages.data-ingestion
+api_integrations: []
+rtr_scripts: []
+collections: []
+auth:
+    scopes:
+        - app-logs:read
+        - app-logs:write
+    permissions: {}
+    roles: []
+functions:
+    - name: logscale-ingest
+      config: null
+      description: Ingest custom data to LogScale
+      path: functions/ingest
+      environment_variables: {}
+      handlers:
+        - name: LogScale Ingest
+          description: Ingest custom data to LogScale
+          method: POST
+          api_path: /ingest
+          payload_type: ""
+          request_schema: request_schema.json
+          response_schema: response_schema.json
+          workflow_integration:
+            disruptive: false
+            system_action: false
+            tags:
+                - LogScale
+          permissions: []
+      language: python
+workflows:
+    - name: Ingest Data to LogScale
+      path: workflows/Ingest_data_to_logscale.yml
+      permissions: []
+parsers: []
+logscale:
+    saved_searches: []
+lookup_files: []
+docs:
+    path: app_docs
+    entrypoint: README.md

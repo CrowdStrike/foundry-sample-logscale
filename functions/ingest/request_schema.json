@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "data": {
+      "title": "Data",
+      "type": "object",
+      "description": "JSON object to ingest into LogScale"
+    }
+  },
+  "required": [
+    "data"
+  ],
+  "description": "Request schema for ingesting data to LogScale"
+}

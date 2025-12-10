@@ -1,6 +1,6 @@
 name: Custom Data Ingestion to LogScale
 description: Demonstrates ingesting custom security data into LogScale using a Python function and FalconPy
-logo: ""
+logo: images/logo.png
 vendor: CrowdStrike
 vendor_products: []
 use_case: Data security

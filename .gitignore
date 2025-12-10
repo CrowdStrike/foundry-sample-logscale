@@ -1,3 +1,6 @@
 .idea/
-functions/ingest/.coverage
-functions/ingest/__pycache__/
+.vscode/
+.DS_Store
+__pycache__/
+.venv/
+.coverage

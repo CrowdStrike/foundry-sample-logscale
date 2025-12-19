@@ -12,6 +12,8 @@ ignored:
     - .+/venv/.+
     - .+/coverage$
     - .+/coverage/.+
+    - e2e
+    - e2e/.+
 ui:
     homepage: pages.data-ingestion
     extensions: []

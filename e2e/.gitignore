@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+
+# Test output
+test-results/
+playwright-report/
+playwright/.cache/
+
+# .dotenvx
+.env
+.env.keys
+
+# Auth state
+playwright/.auth/

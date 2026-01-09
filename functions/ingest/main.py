@@ -46,7 +46,11 @@ def on_create(request: Request, config: dict, logger: Logger) -> Response:
         logger.info("Using FalconPy APIHarnessV2 (Uber Class)")
         file_tuple = [("data_file", ("data_file", json_binary, "application/json"))]
         api_client = APIHarnessV2()
-        result = api_client.command("IngestDataV1", files=file_tuple, headers=headers)
+        result = api_client.command(
+            "IngestDataV1",
+            files=file_tuple,
+            headers=headers
+        )
     else:
         logger.info("Using FalconPy FoundryLogScale (Service Class)")
         json_file = BytesIO(json_binary)

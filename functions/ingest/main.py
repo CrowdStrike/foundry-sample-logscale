@@ -1,4 +1,5 @@
 """Demonstrates ingesting data to Foundry LogScale repo"""
+import os
 from io import BytesIO
 from json import dumps
 from logging import Logger
@@ -32,14 +33,20 @@ def on_create(request: Request, config: dict, logger: Logger) -> Response:
             errors=[APIError(code=400, message="invalid data in request body")]
         )
 
-    # Based on config, determine which FalconPy class to use
-    if config and config.get("use_uber_class"):
+    # Check if running locally (APP_ID env var set) or if config specifies Uber class
+    # Local testing requires Uber class since Service class doesn't support custom headers
+    app_id = os.environ.get("APP_ID")
+    use_uber_class = app_id or (config and config.get("use_uber_class"))
+
+    if use_uber_class:
         logger.info("Using FalconPy APIHarnessV2 (Uber Class)")
+        headers = {"X-CS-APP-ID": app_id} if app_id else {}
         file_tuple = [("data_file", ("data_file", json_binary, "application/json"))]
         api_client = APIHarnessV2()
         result = api_client.command(
             "IngestDataV1",
-            files=file_tuple
+            files=file_tuple,
+            headers=headers
         )
     else:
         logger.info("Using FalconPy FoundryLogScale (Service Class)")

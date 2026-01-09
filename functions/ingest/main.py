@@ -33,28 +33,25 @@ def on_create(request: Request, config: dict, logger: Logger) -> Response:
             errors=[APIError(code=400, message="invalid data in request body")]
         )
 
-    # Check if running locally (APP_ID env var set) or if config specifies Uber class
-    # Local testing requires Uber class since Service class doesn't support custom headers
+    # Set up headers for local testing (requires APP_ID env var)
     app_id = os.environ.get("APP_ID")
-    use_uber_class = app_id or (config and config.get("use_uber_class"))
+    headers = {"X-CS-APP-ID": app_id} if app_id else {}
+
+    # Use Uber class or Service class based on config (deployed) or env var (local)
+    use_uber_class = os.environ.get("USE_UBER_CLASS", "").lower() == "true"
+    if config and config.get("use_uber_class"):
+        use_uber_class = True
 
     if use_uber_class:
         logger.info("Using FalconPy APIHarnessV2 (Uber Class)")
-        headers = {"X-CS-APP-ID": app_id} if app_id else {}
         file_tuple = [("data_file", ("data_file", json_binary, "application/json"))]
         api_client = APIHarnessV2()
-        result = api_client.command(
-            "IngestDataV1",
-            files=file_tuple,
-            headers=headers
-        )
+        result = api_client.command("IngestDataV1", files=file_tuple, headers=headers)
     else:
         logger.info("Using FalconPy FoundryLogScale (Service Class)")
         json_file = BytesIO(json_binary)
-        api_client = FoundryLogScale()
-        result = api_client.ingest_data(
-            data_file=json_file,
-        )
+        api_client = FoundryLogScale(ext_headers=headers)
+        result = api_client.ingest_data(data_file=json_file)
 
     return Response(
         code=result["status_code"],

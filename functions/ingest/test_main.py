@@ -100,7 +100,8 @@ class FnTestCase(unittest.TestCase):
         mock_api_harness_class.assert_called_once()
         mock_api_instance.command.assert_called_once_with(
             "IngestDataV1",
-            files=[("data_file", ("data_file", b'{"event": "test_event", "value": 42}', "application/json"))]
+            files=[("data_file", ("data_file", b'{"event": "test_event", "value": 42}', "application/json"))],
+            headers={}
         )
 
     def test_on_create_missing_data(self):

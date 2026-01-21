@@ -8,3 +8,8 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: "actions/setup-node"
+        versions: [">=6.2.0"]
+      - dependency-name: "actions/setup-python"
+        versions: [">=6.1.0"]

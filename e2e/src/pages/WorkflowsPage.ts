@@ -215,7 +215,7 @@ export class WorkflowsPage extends BasePage {
         this.logger.info('Verifying workflow execution completed via Execution log');
 
         // Navigate directly to Execution log page
-        await this.page.goto('https://falcon.us-2.crowdstrike.com/workflow/fusion/executions');
+        await this.page.goto(`${this.getBaseURL()}/workflow/fusion/executions`);
         await this.page.waitForLoadState('networkidle');
 
         // Poll the Execution log table for "Completed" status

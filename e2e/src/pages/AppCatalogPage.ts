@@ -5,6 +5,7 @@
 import { Page } from '@playwright/test';
 import { BasePage } from './BasePage';
 import { RetryHandler } from '../utils/SmartWaiter';
+import { config } from '../config/TestConfig';
 
 export class AppCatalogPage extends BasePage {
   constructor(page: Page) {

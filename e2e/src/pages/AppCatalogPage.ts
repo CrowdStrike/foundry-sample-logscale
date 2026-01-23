@@ -5,6 +5,7 @@
 import { Page } from '@playwright/test';
 import { BasePage } from './BasePage';
 import { RetryHandler } from '../utils/SmartWaiter';
+import { config } from '../config/TestConfig';
 
 export class AppCatalogPage extends BasePage {
   constructor(page: Page) {
@@ -30,13 +31,12 @@ export class AppCatalogPage extends BasePage {
   private async searchAndNavigateToApp(appName: string): Promise<void> {
     this.logger.info(`Searching for app '${appName}' in catalog`);
 
-    await this.navigateToPath('/foundry/app-catalog', 'App catalog page');
-
-    const filterBox = this.page.getByPlaceholder('Type to filter');
-    if (await filterBox.isVisible().catch(() => false)) {
-      await filterBox.fill(appName);
-      await this.page.waitForLoadState('networkidle');
-    }
+    // Navigate to app catalog with filter query parameter
+    // Format: filter=name:~'searchterm'
+    const baseUrl = config.falconBaseUrl || 'https://falcon.us-2.crowdstrike.com';
+    const filterParam = encodeURIComponent(`name:~'${appName}'`);
+    await this.page.goto(`${baseUrl}/foundry/app-catalog?filter=${filterParam}`);
+    await this.page.waitForLoadState('networkidle');
 
     const appLink = this.page.getByRole('link', { name: appName, exact: true });
 
@@ -124,12 +124,12 @@ export class AppCatalogPage extends BasePage {
   }
 
   /**
-   * Click the final "Install app" button
+   * Click the final "Save and install" button
    */
   private async clickInstallAppButton(): Promise<void> {
-    const installButton = this.page.getByRole('button', { name: 'Install app' });
+    const installButton = this.page.getByRole('button', { name: 'Save and install' });
 
-    await this.waiter.waitForVisible(installButton, { description: 'Install app button' });
+    await this.waiter.waitForVisible(installButton, { description: 'Save and install button' });
 
     // Wait for button to be enabled
     await installButton.waitFor({ state: 'visible', timeout: 10000 });
@@ -138,8 +138,8 @@ export class AppCatalogPage extends BasePage {
     // Simple delay for form to enable button
     await this.waiter.delay(1000);
 
-    await this.smartClick(installButton, 'Install app button');
-    this.logger.info('Clicked Install app button');
+    await this.smartClick(installButton, 'Save and install button');
+    this.logger.info('Clicked Save and install button');
   }
 
   /**

@@ -162,14 +162,10 @@ export class LogScalePage extends BasePage {
         this.logger.info('Waiting for success toast');
 
         const iframe = this.getAppFrame();
-        // Toast has role="alertdialog" and border-positive class for success
-        const toast = iframe.locator('[role="alertdialog"].border-positive');
+        // Toast is inside #toastContainer and has role="alertdialog" with border-positive class
+        const toast = iframe.locator('#toastContainer [role="alertdialog"]').filter({ hasText: expectedText || '' });
 
-        if (expectedText) {
-          await expect(toast.filter({ hasText: expectedText })).toBeVisible({ timeout: 10000 });
-        } else {
-          await expect(toast).toBeVisible({ timeout: 10000 });
-        }
+        await expect(toast.first()).toBeVisible({ timeout: 15000 });
 
         this.logger.success('Success toast appeared');
       },

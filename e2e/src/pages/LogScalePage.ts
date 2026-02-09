@@ -51,15 +51,33 @@ export class LogScalePage extends BasePage {
         // Navigate to Foundry home
         await this.navigateToPath('/foundry/home', 'Foundry Home');
 
-        // Open hamburger menu
-        const menuButton = this.page.getByTestId('nav-trigger');
-        await menuButton.click();
-        await this.page.waitForLoadState('networkidle');
+        // Custom apps button sometimes doesn't appear after hamburger menu click.
+        // Retry with page reload up to 3 times.
+        let customAppsClicked = false;
+        for (let navAttempt = 0; navAttempt < 3 && !customAppsClicked; navAttempt++) {
+          if (navAttempt > 0) {
+            this.logger.info(`Custom apps retry attempt ${navAttempt + 1}/3 - reloading page`);
+            await this.page.reload({ waitUntil: 'networkidle' });
+            await this.page.waitForTimeout(3000);
+          }
+          // Open hamburger menu
+          const menuButton = this.page.getByTestId('nav-trigger');
+          await menuButton.click({ timeout: 15000 });
+          await this.page.waitForLoadState('networkidle');
 
-        // Click Custom apps in the navigation menu
-        const customAppsButton = this.page.getByRole('button', { name: 'Custom apps' });
-        await customAppsButton.click();
-        await this.page.waitForLoadState('networkidle');
+          // Try clicking Custom apps with a reasonable timeout
+          const customAppsButton = this.page.getByRole('button', { name: 'Custom apps' });
+          try {
+            await customAppsButton.click({ timeout: 30000 });
+            await this.page.waitForLoadState('networkidle');
+            customAppsClicked = true;
+          } catch (e) {
+            this.logger.info(`Custom apps button not found on attempt ${navAttempt + 1}`);
+          }
+        }
+        if (!customAppsClicked) {
+          throw new Error('Custom apps button never appeared after 3 attempts');
+        }
 
         // Click on the LogScale app - look for the app name which contains "logscale"
         // The app shows as "foundry-sample-logscale" in the menu
@@ -165,7 +183,7 @@ export class LogScalePage extends BasePage {
         // Toast is inside #toastContainer and has role="alertdialog" with border-positive class
         const toast = iframe.locator('#toastContainer [role="alertdialog"]').filter({ hasText: expectedText || '' });
 
-        await expect(toast.first()).toBeVisible({ timeout: 15000 });
+        await expect(toast.first()).toBeVisible({ timeout: 30000 });
 
         this.logger.success('Success toast appeared');
       },

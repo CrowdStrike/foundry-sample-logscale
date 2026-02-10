@@ -41,7 +41,9 @@ export class LogScalePage extends BasePage {
   }
 
   /**
-   * Navigate to LogScale app via Custom Apps menu
+   * Navigate to LogScale app via Custom Apps menu.
+   * Uses 5-attempt retry with page refresh to handle platform flakiness
+   * where Custom Apps button doesn't appear on first load.
    */
   async navigateToApp(): Promise<void> {
     return this.withTiming(
@@ -50,45 +52,45 @@ export class LogScalePage extends BasePage {
 
         // Navigate to Foundry home
         await this.navigateToPath('/foundry/home', 'Foundry Home');
+        await this.page.waitForLoadState('networkidle');
 
-        // Custom apps button sometimes doesn't appear after hamburger menu click.
-        // Retry with page reload up to 3 times.
+        // Retry with page refresh if Custom apps menu doesn't appear
         let customAppsClicked = false;
-        for (let navAttempt = 0; navAttempt < 3 && !customAppsClicked; navAttempt++) {
-          if (navAttempt > 0) {
-            this.logger.info(`Custom apps retry attempt ${navAttempt + 1}/3 - reloading page`);
-            await this.page.reload({ waitUntil: 'networkidle' });
-            await this.page.waitForTimeout(3000);
-          }
-          // Open hamburger menu
+        for (let attempt = 1; attempt <= 5; attempt++) {
           const menuButton = this.page.getByTestId('nav-trigger');
-          await menuButton.click({ timeout: 15000 });
+          await menuButton.waitFor({ state: 'visible', timeout: 30000 });
+          await menuButton.click();
           await this.page.waitForLoadState('networkidle');
 
-          // Try clicking Custom apps with a reasonable timeout
           const customAppsButton = this.page.getByRole('button', { name: 'Custom apps' });
           try {
-            await customAppsButton.click({ timeout: 30000 });
-            await this.page.waitForLoadState('networkidle');
+            await customAppsButton.waitFor({ state: 'visible', timeout: 20000 });
+            await customAppsButton.click();
+            await this.waiter.delay(1500);
             customAppsClicked = true;
+            this.logger.info(`Custom apps button found on attempt ${attempt}`);
+            break;
           } catch (e) {
-            this.logger.info(`Custom apps button not found on attempt ${navAttempt + 1}`);
+            this.logger.warn(`Custom apps not visible on attempt ${attempt}, refreshing page...`);
+            await this.page.reload();
+            await this.page.waitForLoadState('networkidle');
+            await this.waiter.delay(3000);
           }
         }
         if (!customAppsClicked) {
-          throw new Error('Custom apps button never appeared after 3 attempts');
+          throw new Error('Custom apps button not found after 5 attempts with page refresh');
         }
 
-        // Click on the LogScale app - look for the app name which contains "logscale"
-        // The app shows as "foundry-sample-logscale" in the menu
+        // Click on the LogScale app
         const appButton = this.page.getByRole('button', { name: /logscale/i }).first();
+        await expect(appButton).toBeVisible({ timeout: 20000 });
         await appButton.click();
 
-        // The app may have a submenu with "Data Ingestion" page - click it if present
-        const dataIngestionLink = this.page.getByRole('link', { name: /Data Ingestion/i });
-        if (await dataIngestionLink.isVisible({ timeout: 2000 }).catch(() => false)) {
-          await dataIngestionLink.click();
-        }
+        // The app has a submenu - click the page link to navigate
+        const appLinks = this.page.getByRole('link').filter({ hasText: /data ingestion|logscale/i });
+        const firstLink = appLinks.first();
+        await expect(firstLink).toBeVisible({ timeout: 20000 });
+        await firstLink.click();
 
         // Wait for app page to load
         await this.page.waitForLoadState('networkidle');

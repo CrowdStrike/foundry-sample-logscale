@@ -82,7 +82,10 @@ export class LogScalePage extends BasePage {
         }
 
         // Find the LogScale app in the Custom Apps submenu
-        const appButton = this.page.getByRole('button', { name: /logscale/i }).first();
+        // Use APP_NAME (e.g., "foundry-sample-logscale") to avoid matching
+        // sample app cards on the Foundry Home page like "Custom Data Ingestion to LogScale"
+        const appName = process.env.APP_NAME || 'foundry-sample-logscale';
+        const appButton = this.page.getByRole('button', { name: appName, exact: false }).first();
         await expect(appButton).toBeVisible({ timeout: 20000 });
 
         // Expand the app menu only if not already expanded

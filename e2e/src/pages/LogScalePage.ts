@@ -81,16 +81,23 @@ export class LogScalePage extends BasePage {
           throw new Error('Custom apps button not found after 5 attempts with page refresh');
         }
 
-        // Click on the LogScale app
-        const appButton = this.page.getByRole('button', { name: /logscale/i }).first();
+        // Find the LogScale app in the Custom Apps submenu
+        // Use APP_NAME (e.g., "foundry-sample-logscale") to avoid matching
+        // sample app cards on the Foundry Home page like "Custom Data Ingestion to LogScale"
+        const appName = process.env.APP_NAME || 'foundry-sample-logscale';
+        const appButton = this.page.getByRole('button', { name: appName, exact: false }).first();
         await expect(appButton).toBeVisible({ timeout: 20000 });
-        await appButton.click();
 
-        // The app has a submenu - click the page link to navigate
-        const appLinks = this.page.getByRole('link').filter({ hasText: /data ingestion|logscale/i });
-        const firstLink = appLinks.first();
-        await expect(firstLink).toBeVisible({ timeout: 20000 });
-        await firstLink.click();
+        // Expand the app menu only if not already expanded
+        const isExpanded = await appButton.getAttribute('aria-expanded');
+        if (isExpanded !== 'true') {
+          await appButton.click();
+        }
+
+        // Click the page link to navigate
+        const appLink = this.page.getByRole('link', { name: /data ingestion/i }).first();
+        await expect(appLink).toBeVisible({ timeout: 20000 });
+        await appLink.click();
 
         // Wait for app page to load
         await this.page.waitForLoadState('networkidle');

@@ -1,4 +1,4 @@
-import { test, expect } from '../src/fixtures';
+import { test } from '../src/fixtures';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -21,24 +21,8 @@ test.describe('LogScale Data Ingestion - E2E Tests', () => {
     await logScalePage.submitForm();
     await logScalePage.waitForIngestionSuccess();
 
-    // Data may take 1-2 minutes to appear in LogScale after ingestion
-    // Retry refresh multiple times with waits between attempts
-    let dataFound = false;
-    for (let attempt = 1; attempt <= 6 && !dataFound; attempt++) {
-      // Wait before checking (longer waits for later attempts)
-      const waitTime = attempt <= 2 ? 15000 : 20000;
-      await logScalePage.page.waitForTimeout(waitTime);
-
-      await logScalePage.refreshRecentData();
-
-      // Check if data appeared
-      const cardCount = await logScalePage.getRecentDataCardCount();
-      if (cardCount > 0) {
-        dataFound = true;
-      }
-    }
-
-    // Final verification
+    // Refresh and verify data appears (verifyDataInRecent has 30s timeout)
+    await logScalePage.refreshRecentData();
     await logScalePage.verifyDataInRecent(testData);
   });
 

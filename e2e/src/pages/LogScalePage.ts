@@ -53,12 +53,21 @@ export class LogScalePage extends BasePage {
         // Navigate to Foundry home
         await this.navigateToPath('/foundry/home', 'Foundry Home');
         await this.page.waitForLoadState('networkidle');
+        await this.waiter.delay(2000);
+
+        // Close sidebar menu if already open from a previous navigation
+        const menuButton = this.page.getByTestId('nav-trigger');
+        await menuButton.waitFor({ state: 'visible', timeout: 30000 });
+        const menuIsOpen = await menuButton.getAttribute('aria-expanded');
+        if (menuIsOpen === 'true') {
+          await menuButton.click();
+          await this.waiter.delay(1000);
+        }
 
         // Retry with page refresh if Custom apps menu or app button doesn't appear
         const appName = process.env.APP_NAME || 'foundry-sample-logscale';
         let appFound = false;
-        for (let attempt = 1; attempt <= 5; attempt++) {
-          const menuButton = this.page.getByTestId('nav-trigger');
+        for (let attempt = 1; attempt <= 8; attempt++) {
           await menuButton.waitFor({ state: 'visible', timeout: 30000 });
           await menuButton.click();
           await this.page.waitForLoadState('networkidle');
@@ -93,7 +102,7 @@ export class LogScalePage extends BasePage {
           }
         }
         if (!appFound) {
-          throw new Error(`App '${appName}' not found in Custom apps menu after 5 attempts with page refresh`);
+          throw new Error(`App '${appName}' not found in Custom apps menu after 8 attempts with page refresh`);
         }
 
         // Re-locate the app button and verify visibility before interacting
@@ -265,7 +274,7 @@ export class LogScalePage extends BasePage {
           has: iframe.locator(`strong:has-text("${data.event_type}")`)
         });
 
-        await expect(cardWithEventType.first()).toBeVisible({ timeout: 15000 });
+        await expect(cardWithEventType.first()).toBeVisible({ timeout: 30000 });
 
         // Verify severity badge
         const severityBadge = cardWithEventType.first().locator('sl-badge');

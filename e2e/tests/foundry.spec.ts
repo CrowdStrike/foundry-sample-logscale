@@ -1,4 +1,4 @@
-import { test } from '../src/fixtures';
+import { test, expect } from '../src/fixtures';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -21,13 +21,11 @@ test.describe('LogScale Data Ingestion - E2E Tests', () => {
     await logScalePage.submitForm();
     await logScalePage.waitForIngestionSuccess();
 
-    // Data may take up to a minute to appear in LogScale after ingestion in CI
-    for (let attempt = 1; attempt <= 4; attempt++) {
-      await logScalePage.page.waitForTimeout(10000);
+    // Data may take up to a minute to appear in LogScale after deploy/release in CI
+    await expect(async () => {
       await logScalePage.refreshRecentData();
-      if (await logScalePage.hasRecentData()) break;
-    }
-    await logScalePage.verifyDataInRecent(testData);
+      await logScalePage.verifyDataInRecent(testData);
+    }).toPass({ timeout: 90000, intervals: [5000, 10000, 10000] });
   });
 
   test('should use Fill with Test Data button and submit', async ({ logScalePage }) => {

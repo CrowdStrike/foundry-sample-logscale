@@ -274,7 +274,7 @@ export class LogScalePage extends BasePage {
           has: iframe.locator(`strong:has-text("${data.event_type}")`)
         });
 
-        await expect(cardWithEventType.first()).toBeVisible({ timeout: 30000 });
+        await expect(cardWithEventType.first()).toBeVisible({ timeout: 5000 });
 
         // Verify severity badge
         const severityBadge = cardWithEventType.first().locator('sl-badge');

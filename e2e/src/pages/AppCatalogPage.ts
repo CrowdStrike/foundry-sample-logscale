@@ -296,6 +296,10 @@ export class AppCatalogPage extends BasePage {
         return;
       }
 
+      // Wait for any loading overlay to disappear before interacting
+      const loader = this.page.locator('[data-test-selector="falcon-overlay-loader"]');
+      await loader.waitFor({ state: 'hidden', timeout: 30000 }).catch(() => {});
+
       // Click the 3-dot menu button
       const openMenuButton = this.page.getByRole('button', { name: 'Open menu' });
       await this.waiter.waitForVisible(openMenuButton, { description: 'Open menu button' });

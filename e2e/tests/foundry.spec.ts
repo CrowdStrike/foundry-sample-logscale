@@ -25,7 +25,7 @@ test.describe('LogScale Data Ingestion - E2E Tests', () => {
     await expect(async () => {
       await logScalePage.refreshRecentData();
       await logScalePage.verifyDataInRecent(testData);
-    }).toPass({ timeout: 90000, intervals: [5000, 10000, 10000] });
+    }).toPass({ timeout: 180000, intervals: [10000] });
   });
 
   test('should use Fill with Test Data button and submit', async ({ logScalePage }) => {

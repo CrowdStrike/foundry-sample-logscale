@@ -106,6 +106,9 @@ export class AppCatalogPage extends BasePage {
     // Wait for installation to complete
     await this.waitForInstallation(appName);
 
+    // Dismiss any toast notifications left from install to prevent UI overlay issues
+    await this.dismissToasts();
+
     this.logger.success(`App '${appName}' installed successfully`);
     return true;
   }
@@ -217,6 +220,20 @@ export class AppCatalogPage extends BasePage {
   }
 
   /**
+   * Dismiss any visible toast notifications by clicking their close buttons
+   */
+  private async dismissToasts(): Promise<void> {
+    const closeButtons = this.page.locator('[role="alertdialog"] button[aria-label="Close"], [role="alert"] button[aria-label="Close"]');
+    const count = await closeButtons.count();
+    for (let i = 0; i < count; i++) {
+      await closeButtons.nth(i).click().catch(() => {});
+    }
+    if (count > 0) {
+      this.logger.info(`Dismissed ${count} toast notification(s)`);
+    }
+  }
+
+  /**
    * Navigate to app via Custom Apps menu.
    * Uses 5-attempt retry with page refresh to handle platform flakiness
    * where Custom Apps button doesn't appear on first load.
@@ -295,10 +312,6 @@ export class AppCatalogPage extends BasePage {
         this.logger.info(`App '${appName}' is already uninstalled`);
         return;
       }
-
-      // Wait for any loading overlay to disappear before interacting
-      const loader = this.page.locator('[data-test-selector="falcon-overlay-loader"]');
-      await loader.waitFor({ state: 'hidden', timeout: 30000 }).catch(() => {});
 
       // Click the 3-dot menu button
       const openMenuButton = this.page.getByRole('button', { name: 'Open menu' });

@@ -21,8 +21,12 @@ test.describe('LogScale Data Ingestion - E2E Tests', () => {
     await logScalePage.submitForm();
     await logScalePage.waitForIngestionSuccess();
 
-    // Refresh and verify data appears (verifyDataInRecent has 30s timeout)
-    await logScalePage.refreshRecentData();
+    // Data may take up to a minute to appear in LogScale after ingestion in CI
+    for (let attempt = 1; attempt <= 4; attempt++) {
+      await logScalePage.page.waitForTimeout(10000);
+      await logScalePage.refreshRecentData();
+      if (await logScalePage.hasRecentData()) break;
+    }
     await logScalePage.verifyDataInRecent(testData);
   });
 

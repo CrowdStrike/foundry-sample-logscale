@@ -106,6 +106,9 @@ export class AppCatalogPage extends BasePage {
     // Wait for installation to complete
     await this.waitForInstallation(appName);
 
+    // Dismiss any toast notifications left from install to prevent UI overlay issues
+    await this.dismissToasts();
+
     this.logger.success(`App '${appName}' installed successfully`);
     return true;
   }
@@ -214,6 +217,20 @@ export class AppCatalogPage extends BasePage {
     }
 
     this.logger.info(`Catalog status not updated yet after ${maxAttempts * 5}s, but toast confirmed installation - continuing`);
+  }
+
+  /**
+   * Dismiss any visible toast notifications by clicking their close buttons
+   */
+  private async dismissToasts(): Promise<void> {
+    const closeButtons = this.page.locator('[role="alertdialog"] button[aria-label="Close"], [role="alert"] button[aria-label="Close"]');
+    const count = await closeButtons.count();
+    for (let i = 0; i < count; i++) {
+      await closeButtons.nth(i).click().catch(() => {});
+    }
+    if (count > 0) {
+      this.logger.info(`Dismissed ${count} toast notification(s)`);
+    }
   }
 
   /**

@@ -21,25 +21,11 @@ test.describe('LogScale Data Ingestion - E2E Tests', () => {
     await logScalePage.submitForm();
     await logScalePage.waitForIngestionSuccess();
 
-    // Data may take 1-2 minutes to appear in LogScale after ingestion
-    // Retry refresh multiple times with waits between attempts
-    let dataFound = false;
-    for (let attempt = 1; attempt <= 6 && !dataFound; attempt++) {
-      // Wait before checking (longer waits for later attempts)
-      const waitTime = attempt <= 2 ? 15000 : 20000;
-      await logScalePage.page.waitForTimeout(waitTime);
-
+    // Data may take up to a minute to appear in LogScale after deploy/release in CI
+    await expect(async () => {
       await logScalePage.refreshRecentData();
-
-      // Check if data appeared
-      const cardCount = await logScalePage.getRecentDataCardCount();
-      if (cardCount > 0) {
-        dataFound = true;
-      }
-    }
-
-    // Final verification
-    await logScalePage.verifyDataInRecent(testData);
+      await logScalePage.verifyDataInRecent(testData);
+    }).toPass({ timeout: 180000, intervals: [10000] });
   });
 
   test('should use Fill with Test Data button and submit', async ({ logScalePage }) => {

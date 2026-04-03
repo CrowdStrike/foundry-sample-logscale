@@ -41,91 +41,138 @@ export class LogScalePage extends BasePage {
   }
 
   /**
-   * Navigate to LogScale app via Custom Apps menu.
-   * Uses 5-attempt retry with page refresh to handle platform flakiness
-   * where Custom Apps button doesn't appear on first load.
+   * Navigate to LogScale app.
+   * Strategy: Try "Open app" button from App Catalog first (fastest, most reliable),
+   * then fall back to Custom Apps menu if the button isn't available.
    */
   async navigateToApp(): Promise<void> {
     return this.withTiming(
       async () => {
-        this.logger.info('Navigating to LogScale app via Custom Apps');
-
-        // Navigate to Foundry home
-        await this.navigateToPath('/foundry/home', 'Foundry Home');
-        await this.page.waitForLoadState('networkidle');
-        await this.waiter.delay(2000);
-
-        // Close sidebar menu if already open from a previous navigation
-        const menuButton = this.page.getByTestId('nav-trigger');
-        await menuButton.waitFor({ state: 'visible', timeout: 30000 });
-        const menuIsOpen = await menuButton.getAttribute('aria-expanded');
-        if (menuIsOpen === 'true') {
-          await menuButton.click();
-          await this.waiter.delay(1000);
-        }
-
-        // Retry with page refresh if Custom apps menu or app button doesn't appear
         const appName = process.env.APP_NAME || 'foundry-sample-logscale';
-        let appFound = false;
-        for (let attempt = 1; attempt <= 8; attempt++) {
-          await menuButton.waitFor({ state: 'visible', timeout: 30000 });
-          await menuButton.click();
-          await this.page.waitForLoadState('networkidle');
 
-          const customAppsButton = this.page.getByRole('button', { name: 'Custom apps' });
-          try {
-            await customAppsButton.waitFor({ state: 'visible', timeout: 20000 });
-            await customAppsButton.click();
-            await this.waiter.delay(1500);
-            this.logger.info(`Custom apps button found on attempt ${attempt}`);
-          } catch (e) {
-            this.logger.warn(`Custom apps not visible on attempt ${attempt}, refreshing page...`);
-            await this.page.reload();
-            await this.page.waitForLoadState('networkidle');
-            await this.waiter.delay(3000);
-            continue;
-          }
+        // Strategy 1: Try "Open app" from the App Catalog detail page
+        const openedViaCatalog = await this.tryOpenAppViaCatalog(appName);
+        if (openedViaCatalog) return;
 
-          // Check if the app button appears in the submenu
-          const appButton = this.page.getByRole('button', { name: appName, exact: false }).first();
-          try {
-            await appButton.waitFor({ state: 'visible', timeout: 10000 });
-            appFound = true;
-            this.logger.info(`App '${appName}' found in Custom apps menu on attempt ${attempt}`);
-            break;
-          } catch (e) {
-            this.logger.warn(`App '${appName}' not in Custom apps on attempt ${attempt}, refreshing page...`);
-            await this.page.reload();
-            await this.page.waitForLoadState('networkidle');
-            await this.waiter.delay(3000);
-            continue;
-          }
-        }
-        if (!appFound) {
-          throw new Error(`App '${appName}' not found in Custom apps menu after 8 attempts with page refresh`);
-        }
-
-        // Re-locate the app button and verify visibility before interacting
-        const appButton = this.page.getByRole('button', { name: appName, exact: false }).first();
-        await expect(appButton).toBeVisible({ timeout: 10000 });
-
-        // Expand the app menu only if not already expanded
-        const isExpanded = await appButton.getAttribute('aria-expanded');
-        if (isExpanded !== 'true') {
-          await appButton.click();
-        }
-
-        // Click the page link to navigate
-        const appLink = this.page.getByRole('link', { name: /data ingestion/i }).first();
-        await expect(appLink).toBeVisible({ timeout: 20000 });
-        await appLink.click();
-
-        // Wait for app page to load
-        await this.page.waitForLoadState('networkidle');
-        await this.verifyPageLoaded();
+        // Strategy 2: Fall back to Custom Apps menu with retry loop
+        this.logger.info('Falling back to Custom Apps menu navigation');
+        await this.navigateViaCustomApps(appName);
       },
       'Navigate to LogScale app'
     );
+  }
+
+  /**
+   * Try to open the app via the "Open app" button on its App Catalog detail page.
+   * Returns true if successful, false if the button wasn't available.
+   */
+  private async tryOpenAppViaCatalog(appName: string): Promise<boolean> {
+    try {
+      this.logger.info(`Trying to open app via App Catalog "Open app" button`);
+
+      // Navigate to app catalog with filter to find the app
+      const baseUrl = this.getBaseURL();
+      const filterParam = encodeURIComponent(`name:~'${appName}'`);
+      await this.page.goto(`${baseUrl}/foundry/app-catalog?filter=${filterParam}`);
+      await this.page.waitForLoadState('networkidle');
+
+      // Click on the app link to go to its detail page
+      const appLink = this.page.getByRole('link', { name: appName, exact: true });
+      await appLink.waitFor({ state: 'visible', timeout: 10000 });
+      await appLink.click();
+      await this.page.waitForLoadState('networkidle');
+
+      // Look for the "Open app" button
+      const openAppButton = this.page.getByRole('button', { name: 'Open app' });
+      await openAppButton.waitFor({ state: 'visible', timeout: 5000 });
+      await openAppButton.click();
+      this.logger.success('Clicked "Open app" button from App Catalog');
+
+      // Wait for app page to load and verify
+      await this.page.waitForLoadState('networkidle');
+      await this.verifyPageLoaded();
+      return true;
+    } catch (e) {
+      this.logger.warn(`"Open app" button not available: ${(e as Error).message}`);
+      return false;
+    }
+  }
+
+  /**
+   * Navigate to app via Custom Apps menu with retry loop.
+   * Handles platform flakiness where Custom Apps button doesn't appear on first load.
+   */
+  private async navigateViaCustomApps(appName: string): Promise<void> {
+    await this.navigateToPath('/foundry/home', 'Foundry Home');
+    await this.page.waitForLoadState('networkidle');
+    await this.waiter.delay(2000);
+
+    // Close sidebar menu if already open from a previous navigation
+    const menuButton = this.page.getByTestId('nav-trigger');
+    await menuButton.waitFor({ state: 'visible', timeout: 30000 });
+    const menuIsOpen = await menuButton.getAttribute('aria-expanded');
+    if (menuIsOpen === 'true') {
+      await menuButton.click();
+      await this.waiter.delay(1000);
+    }
+
+    let appFound = false;
+    for (let attempt = 1; attempt <= 8; attempt++) {
+      await menuButton.waitFor({ state: 'visible', timeout: 30000 });
+      await menuButton.click();
+      await this.page.waitForLoadState('networkidle');
+
+      const customAppsButton = this.page.getByRole('button', { name: 'Custom apps' });
+      try {
+        await customAppsButton.waitFor({ state: 'visible', timeout: 20000 });
+        await customAppsButton.click();
+        await this.waiter.delay(1500);
+        this.logger.info(`Custom apps button found on attempt ${attempt}`);
+      } catch (e) {
+        this.logger.warn(`Custom apps not visible on attempt ${attempt}, refreshing page...`);
+        await this.page.reload();
+        await this.page.waitForLoadState('networkidle');
+        await this.waiter.delay(3000);
+        continue;
+      }
+
+      // Check if the app button appears in the submenu
+      const appButton = this.page.getByRole('button', { name: appName, exact: false }).first();
+      try {
+        await appButton.waitFor({ state: 'visible', timeout: 10000 });
+        appFound = true;
+        this.logger.info(`App '${appName}' found in Custom apps menu on attempt ${attempt}`);
+        break;
+      } catch (e) {
+        this.logger.warn(`App '${appName}' not in Custom apps on attempt ${attempt}, refreshing page...`);
+        await this.page.reload();
+        await this.page.waitForLoadState('networkidle');
+        await this.waiter.delay(3000);
+        continue;
+      }
+    }
+    if (!appFound) {
+      throw new Error(`App '${appName}' not found in Custom apps menu after 8 attempts with page refresh`);
+    }
+
+    // Re-locate the app button and verify visibility before interacting
+    const appButton = this.page.getByRole('button', { name: appName, exact: false }).first();
+    await expect(appButton).toBeVisible({ timeout: 10000 });
+
+    // Expand the app menu only if not already expanded
+    const isExpanded = await appButton.getAttribute('aria-expanded');
+    if (isExpanded !== 'true') {
+      await appButton.click();
+    }
+
+    // Click the page link to navigate
+    const appLink = this.page.getByRole('link', { name: /data ingestion/i }).first();
+    await expect(appLink).toBeVisible({ timeout: 20000 });
+    await appLink.click();
+
+    // Wait for app page to load
+    await this.page.waitForLoadState('networkidle');
+    await this.verifyPageLoaded();
   }
 
   /**

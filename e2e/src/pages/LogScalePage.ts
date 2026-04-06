@@ -74,22 +74,22 @@ export class LogScalePage extends BasePage {
       const baseUrl = this.getBaseURL();
       const filterParam = encodeURIComponent(`name:~'${appName}'`);
       await this.page.goto(`${baseUrl}/foundry/app-catalog?filter=${filterParam}`);
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
 
       // Click on the app link to go to its detail page
       const appLink = this.page.getByRole('link', { name: appName, exact: true });
-      await appLink.waitFor({ state: 'visible', timeout: 10000 });
+      await appLink.waitFor({ state: 'visible', timeout: 15000 });
       await appLink.click();
-      await this.page.waitForLoadState('networkidle');
 
       // Look for the "Open app" button
       const openAppButton = this.page.getByRole('button', { name: 'Open app' });
-      await openAppButton.waitFor({ state: 'visible', timeout: 5000 });
+      await openAppButton.waitFor({ state: 'visible', timeout: 10000 });
       await openAppButton.click();
       this.logger.success('Clicked "Open app" button from App Catalog');
 
-      // Wait for app page to load and verify
-      await this.page.waitForLoadState('networkidle');
+      // Wait for the iframe to become visible (it starts with class="hidden" and transitions)
+      const iframe = this.page.locator('iframe');
+      await iframe.waitFor({ state: 'visible', timeout: 30000 });
       await this.verifyPageLoaded();
       return true;
     } catch (e) {

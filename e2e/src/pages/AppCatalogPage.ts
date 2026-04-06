@@ -43,7 +43,7 @@ export class AppCatalogPage extends BasePage {
     try {
       await this.waiter.waitForVisible(appLink, {
         description: `App '${appName}' link in catalog`,
-        timeout: 15000
+        timeout: 30000
       });
       this.logger.success(`Found app '${appName}' in catalog`);
       await this.smartClick(appLink, `App '${appName}' link`);

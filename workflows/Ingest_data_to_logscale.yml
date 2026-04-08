@@ -16,6 +16,6 @@ trigger:
         type: object
 actions:
     ingest_to_logscale_function:
-        id: functions.logscale-ingest.LogScale Ingest
+        id: functions.ingest.LogScale Ingest
         properties:
             data: ${json_data}

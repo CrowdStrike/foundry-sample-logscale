@@ -21,7 +21,7 @@ export class LogScalePage extends BasePage {
    * Get the iframe containing the app content
    */
   private getAppFrame(): FrameLocator {
-    return this.page.frameLocator('iframe');
+    return this.page.frameLocator('iframe[name="portal"]');
   }
 
   protected getPagePath(): string {
@@ -30,7 +30,7 @@ export class LogScalePage extends BasePage {
 
   protected async verifyPageLoaded(): Promise<void> {
     // First wait for the iframe to be visible
-    await expect(this.page.locator('iframe')).toBeVisible({ timeout: 15000 });
+    await expect(this.page.locator('iframe[name="portal"]')).toBeVisible({ timeout: 15000 });
     this.logger.info('App iframe is visible');
 
     // Then check for content inside the iframe
@@ -88,7 +88,7 @@ export class LogScalePage extends BasePage {
       this.logger.success('Clicked "Open app" button from App Catalog');
 
       // Wait for the iframe to become visible (it starts with class="hidden" and transitions)
-      const iframe = this.page.locator('iframe');
+      const iframe = this.page.locator('iframe[name="portal"]');
       await iframe.waitFor({ state: 'visible', timeout: 30000 });
       await this.verifyPageLoaded();
       return true;

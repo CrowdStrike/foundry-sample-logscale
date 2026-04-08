@@ -270,7 +270,7 @@ function generateTestData() {
 
     try {
       const logscaleFunction = falcon.cloudFunction({
-        name: 'logscale-ingest'
+        name: 'ingest'
       });
 
       const response = await logscaleFunction.path('/ingest')

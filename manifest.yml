@@ -56,7 +56,7 @@ auth:
     permissions: {}
     roles: []
 functions:
-    - name: logscale-ingest
+    - name: ingest
       config:
         use_uber_class: false
       description: Ingest custom data to LogScale

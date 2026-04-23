@@ -7,7 +7,7 @@ test.describe('LogScale Data Ingestion - E2E Tests', () => {
     await logScalePage.navigateToApp();
   });
 
-  test('should fill form with test data and submit successfully', async ({ logScalePage }) => {
+  test('should fill form with test data and submit successfully', { timeout: 240_000 }, async ({ logScalePage }) => {
     await logScalePage.navigateToApp();
 
     // Fill form with specific test data

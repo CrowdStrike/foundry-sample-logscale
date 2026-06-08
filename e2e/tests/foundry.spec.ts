@@ -37,7 +37,7 @@ test.describe('LogScale Data Ingestion - E2E Tests', () => {
 });
 
 test.describe('LogScale Workflow - E2E Tests', () => {
-  test('should execute Ingest Data to LogScale workflow', { timeout: 180_000 }, async ({ workflowsPage }) => {
+  test('should execute Ingest Data to LogScale workflow', async ({ workflowsPage }) => {
     await workflowsPage.navigateToWorkflows();
     await workflowsPage.verifyWorkflowExists('Ingest Data to LogScale');
     await workflowsPage.executeAndVerifyWorkflow('Ingest Data to LogScale');

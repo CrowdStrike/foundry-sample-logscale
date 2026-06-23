@@ -206,7 +206,7 @@ curl -X POST 'http://localhost:8081' \
     "method": "POST",
     "url": "/ingest",
     "body": {
-        "data": {
+        "payload": {
            "event_type": "test",
            "severity": "low",
            "description": "Test event"

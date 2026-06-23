@@ -46,7 +46,7 @@ class FnTestCase(unittest.TestCase):
         # Create request with valid data
         request = Request()
         request.body = {
-            "data": {"event": "test_event", "timestamp": 1234567890}
+            "payload": {"event": "test_event", "timestamp": 1234567890}
         }
 
         # Mock config without use_uber_class (defaults to service class)
@@ -83,7 +83,7 @@ class FnTestCase(unittest.TestCase):
         # Create request with valid data
         request = Request()
         request.body = {
-            "data": {"event": "test_event", "value": 42}
+            "payload": {"event": "test_event", "value": 42}
         }
 
         # Mock config with use_uber_class set to True
@@ -125,7 +125,7 @@ class FnTestCase(unittest.TestCase):
     def test_on_create_none_data(self):
         """Test POST request with None data returns 400 error."""
         request = Request()
-        request.body = {"data": None}
+        request.body = {"payload": None}
 
         config = {}
         logger = MagicMock()
@@ -140,7 +140,7 @@ class FnTestCase(unittest.TestCase):
     def test_on_create_empty_data(self):
         """Test POST request with empty string data returns 400 error."""
         request = Request()
-        request.body = {"data": ""}
+        request.body = {"payload": ""}
 
         config = {}
         logger = MagicMock()
@@ -160,7 +160,7 @@ class FnTestCase(unittest.TestCase):
 
         request = Request()
         request.body = {
-            "data": {"invalid": set([1, 2, 3])}  # Sets are not JSON serializable
+            "payload": {"invalid": set([1, 2, 3])}  # Sets are not JSON serializable
         }
 
         config = {}
@@ -192,7 +192,7 @@ class FnTestCase(unittest.TestCase):
 
         request = Request()
         request.body = {
-            "data": {"event": "test_event"}
+            "payload": {"event": "test_event"}
         }
 
         config = {}
@@ -219,7 +219,7 @@ class FnTestCase(unittest.TestCase):
 
         request = Request()
         request.body = {
-            "data": {"event": "test_event"}
+            "payload": {"event": "test_event"}
         }
 
         config = {"use_uber_class": True}
@@ -246,7 +246,7 @@ class FnTestCase(unittest.TestCase):
         # Create request with complex nested data
         request = Request()
         request.body = {
-            "data": {
+            "payload": {
                 "event": "complex_event",
                 "nested": {
                     "level1": {
@@ -282,7 +282,7 @@ class FnTestCase(unittest.TestCase):
 
         request = Request()
         request.body = {
-            "data": {"event": "test_event"}
+            "payload": {"event": "test_event"}
         }
 
         config = None
@@ -300,7 +300,7 @@ class FnTestCase(unittest.TestCase):
         # This test ensures APIHarnessV2 is NOT called when use_uber_class is False
         request = Request()
         request.body = {
-            "data": {"event": "test_event"}
+            "payload": {"event": "test_event"}
         }
 
         config = {"use_uber_class": False}
@@ -334,7 +334,7 @@ class FnTestCase(unittest.TestCase):
 
         request = Request()
         request.body = {
-            "data": {"event": "test_event"}
+            "payload": {"event": "test_event"}
         }
 
         config = {}
@@ -357,7 +357,7 @@ class FnTestCase(unittest.TestCase):
 
         request = Request()
         request.body = {
-            "data": {"event": "test_event"}
+            "payload": {"event": "test_event"}
         }
 
         config = {"use_uber_class": True}

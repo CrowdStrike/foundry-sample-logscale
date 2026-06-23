@@ -274,7 +274,7 @@ function generateTestData() {
       });
 
       const response = await logscaleFunction.path('/ingest')
-        .post({ data: formData });
+        .post({ payload: formData });
 
       if (response.status_code === 200 || response.code === 200) {
         showMessage('success', 'Data successfully ingested into LogScale!');

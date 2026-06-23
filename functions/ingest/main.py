@@ -15,7 +15,7 @@ def on_create(request: Request, config: dict, logger: Logger) -> Response:
     """Write data into LogScale."""
 
     # Fetch the data to write from input payload
-    data = request.body.get("data")
+    data = request.body.get("payload")
     if not data:
         logger.error("No data received in request")
         return Response(

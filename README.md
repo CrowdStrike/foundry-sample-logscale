@@ -26,7 +26,7 @@ The app includes:
 ## Prerequisites
 
 * The Foundry CLI (instructions below).
-* Python 3.13+ or Docker (needed if modifying the app's functions locally). See [Python For Beginners](https://www.python.org/about/gettingstarted/) for installation instructions.
+* Python 3.14+ or Docker (needed if modifying the app's functions locally). See [Python For Beginners](https://www.python.org/about/gettingstarted/) for installation instructions.
 
 ### Install the Foundry CLI
 

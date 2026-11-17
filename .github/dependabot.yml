@@ -1,7 +1,9 @@
 version: 2
 updates:
   - package-ecosystem: pip
-    directory: "/functions/ingest/"
+    directories:
+      - "/functions/ingest/"
+      - "/.github"
     schedule:
       interval: weekly
   - package-ecosystem: github-actions
